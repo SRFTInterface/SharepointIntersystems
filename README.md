@@ -52,6 +52,7 @@ DELETE /api/web/GetFolderByServerRelativeUrl(..SharepointFilePath/Files('..FileN
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
 | `FileName`      | `string` | Replace with filename to delete    
+```
 ## Seruices 
 
 SharepointUploadFileEndpoint
