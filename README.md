@@ -18,11 +18,12 @@ You will need to know the Tennant Name, Tannant ID, Client ID and CLient Secret
 
 You can import the code by downloading the Sharepoint Rest API xml SharepointRestAPI.xml into your namespace. Note that this should show all as ADD on your system it is on my systems i already have 2 classes
 
-TODO Insert Picture here of the deploy screen 
-
-TODO Insert Picture of production here .
-
-See OAUTH SETUP PAGES AS NEED TO SET UP OAUTH IN TIE as well
+-Go to Deploy and deploy the XML file
+-Set up required OAUTH as SPO name (details below)
+-Set up file paths for upload and download 
+- Set SSL config on the operation to a blank SSL with 1.3 client
+-replace tennant name and tennant id in the rest operation with the tennant name and id you have set up. Including the {}
+ 
 
     
 ## API Reference- Note .. means parameters
@@ -113,17 +114,9 @@ Client
 
 
 
-TODO Insert OAUTH Page settings here 
-
- 
 ## Demo
 
-Upload file
+https://youtu.be/485dTXYp2BU
 
-Getting file list 
-
-Deleting File
-
-
-TODO Insert video
+Did not cover in this video the file settings or filter. 
 
