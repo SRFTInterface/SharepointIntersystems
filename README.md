@@ -103,7 +103,8 @@ This needs to setup with the following setting: · Issuer endpoint: https://acco
 Client
 · Set your Application and Client Name the same, this will be the setting you use in OAuthClientApplicationName of the rest operation
 
-· Put a Tick in USE TLS/SSL and a hostname of localhost
+· Put a Tick in USE TLS/SSL and a hostname of the servers IP address. 
+    Note: localhost and the Virtual IP will not work on a mirrored server in the hostname, this need to be the servers IP.
 
 · Select Client Credentials and Form Encoded Body at the bottom of the form
 
