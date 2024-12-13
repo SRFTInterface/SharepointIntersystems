@@ -83,11 +83,12 @@ the file adapter to upload all files too, after downloaded from SPO
 - DeleteFileAfterDownload
 
 Default is do not delete file from Sharepoint site after, if true the file will be deleted from SPO.
-##  SharepointDownloadFileEndpoint
+## Operations
+- SharepointDownloadFileEndpoint
 
 A standard EnsLib.File.OutboundAdapter to move the file to.
 
- SharepointRESTConnector
+- SharepointRESTConnector
 
 API calls are here to upload files, getfilelist, download files and delete files.
 ## OAUTH setup
