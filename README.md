@@ -10,7 +10,7 @@ The following is interesystems classes to allow the Upload and Download of files
 - [Mark O'Reilly](https://www.github.com/Sparkei)
 - Dean White
 
-## Prerequistes
+## Prerequisites
 Tp use this code you need a sharepoint site set up with API enabled
 You will need to know the Tennant Name, Tannant ID, Client ID and CLient Secret
 
