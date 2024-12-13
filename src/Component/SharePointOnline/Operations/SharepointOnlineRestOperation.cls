@@ -66,47 +66,36 @@ ClassMethod OnGetConnections(Output pArray As %String, pItem As Ens.Config.Item)
 
 Method GetFileList(pQuery As Ens.Request, Output pResponse As EnsLib.HTTP.GenericMessage) As %Status
 {
-    $$$TRACE("GetFileList = "_..GetOnlyNewFiles_", id = "_$SYSTEM.SYS.ProcessID())
     s filter=""
     if (""_..GetOnlyNewFiles = "true")
     {
         s a="",b=..%RequestHeader.TargetConfigName
   
-        $$$TRACE(b)
        //logical mode so status is 9
        //&SQL(SELECT Max(TimeProcessed) INTO :a FROM Ens.MessageHeader where TargetConfigName=:b  AND Status = 9 )
        &SQL(SELECT TOP 1 TimeProcessed INTO :a FROM Ens.MessageHeader head WHERE head.Status = 9 AND (head.SourceConfigName = :b AND head.MessageBodyClassName = 'Ens.StreamContainer') ORDER BY head.ID Desc)
            IF SQLCODE<0 {WRITE "SQLCODE error ",SQLCODE  RETURN %msg}
-        //$$$Trace(a)
+        
         //needs encoded to time for API as XSD time, a should be timestamp value hopefully
         set XSDtime=##Class(%Library.StringTimeStamp).LogicalToXSD(a) 
         
-        $$$TRACE(XSDtime)
         //there's a Z on XSD time... 
         set XSDtime=$EXTRACT(XSDtime,1,$LENGTH(XSDtime)-1)
         $$$TRACE(XSDtime)
         s filter = "?$filter=TimeLastModified gt datetime'"_XSDtime_"'"
         s filtervalue = "TimeLastModified gt datetime'"_XSDtime_"'"
         s filter = "?$filter="_$$$URLENCODE("TimeLastModified gt datetime'"_XSDtime_"'")
-        $$$TRACE("Filter = "_filter)
-
-        $$$TRACE("SET FILTER AS hardcoded as it is working in postman with no spaces")
-        //S filter="$filter"
-        //s filter=$$$URLENCODE(filter)
-       // $$$TRACE("URL ENCODED FILTER" _filter)
+        if a=""{s filter =""}
     }
     
     Set tHttpRequest=##class(%Net.HttpRequest).%New()
     set tHttpRequest.WriteRawMode=1
     do tHttpRequest.SetHeader("Accept","application/json;odata=verbose")
     do tHttpRequest.SetHeader("Content-Type","application/json")
-    //if filter '=""{Do tHttpRequest.SetParam("$filter", filtervalue)}
     Set ..Adapter.URL="/sites/"_$$$URLENCODE(..SharepointSitename)_"/_api/web/GetFolderByServerRelativeUrl('"_$$$URLENCODE(..SharepointFilePath)_"')/Files"_filter
-   //Set ..Adapter.URL="/sites/"_$$$URLENCODE(..SharepointSitename)_"/_api/web/GetFolderByServerRelativeUrl('"_$$$URLENCODE(..SharepointFilePath)_"')/Files$filter"
-    $$$TRACE("Get changes from "_..Adapter.URL)
     Set tSC=..AddAccessToken(.tHttpRequest)
-   //s tHttpRequest.EntityBody=##Class(%Stream.FileBinary).%New()
-	//s sc=tHttpRequest.EntityBody.Write(pQuery.StringValue)
+    if $$$ISERR(tSC) quit tSC
+    $$$TRACE("Get File list changes from "_..Adapter.URL)
 	Set tHttpResponse = ##class(%Net.HttpResponse).%New()
 	S send="GET"
     $$$TRACE("Sending to "_..Adapter.URL)
@@ -122,7 +111,7 @@ Method DeleteFile(pRequest As Messages.Generic.GenericDocument, Output pResponse
     do tHttpRequest.SetHeader("Accept","application/json;odata=verbose")
     do tHttpRequest.SetHeader("Content-Type","application/json")
     Set ..Adapter.URL="/sites/"_$$$URLENCODE(..SharepointSitename)_"/_api/web/GetFolderByServerRelativeUrl('"_$$$URLENCODE(..SharepointFilePath)_"')/Files('"_$$$URLENCODE(pRequest.FileName)_"')"
-    $$$TRACE("Get changes from "_..Adapter.URL)
+    $$$TRACE("Delete File from "_..Adapter.URL)
     Set tSC=..AddAccessToken(.tHttpRequest)
    //s tHttpRequest.EntityBody=##Class(%Stream.FileBinary).%New()
 	//s sc=tHttpRequest.EntityBody.Write(pQuery.StringValue)
@@ -165,7 +154,7 @@ Method DownloadFile(pRequest As Ens.StringContainer, Output pDownloadResponse As
 
 Method AddFile(pFileToUpload As Ens.StreamContainer, Output pResponse As EnsLib.HTTP.GenericMessage) As %Status
 {
-    $$$TRACE("AddFile")
+   
 	s fn=$$$URLENCODE(##Class(%File).GetFilename(pFileToUpload.OriginalFilename))
     Set tHttpRequest=##class(%Net.HttpRequest).%New()
     set tHttpRequest.WriteRawMode=1
@@ -173,6 +162,7 @@ Method AddFile(pFileToUpload As Ens.StreamContainer, Output pResponse As EnsLib.
     do tHttpRequest.SetHeader("Content-Type","application/json")
     Set ..Adapter.URL="/sites/"_$$$URLENCODE(..SharepointSitename)_"/_api/web/GetFolderByServerRelativeUrl('"_$$$URLENCODE(..SharepointFilePath)_"')/Files/add(url='"_fn_"',overwrite="_$$$URLENCODE(..OverwriteExistingFile)_")"
     Set tSC=..AddAccessToken(.tHttpRequest)
+    if $$$ISERR(tSC){Q tSC}
    s tHttpRequest.EntityBody=##Class(%Stream.FileBinary).%New()
 	s sc=tHttpRequest.EntityBody.CopyFromAndSave(pFileToUpload.Stream)
 	Set tHttpResponse = ##class(%Net.HttpResponse).%New()
@@ -187,7 +177,6 @@ Method SendRequest(Output tHttpResponse As %Net.HttpResponse, send As %String, t
     s tSC=$$$OK
     
     Set tSC=..Adapter.SendFormDataArray(.tHttpResponse, send, tHttpRequest)
-    $$$TRACE("AFTER THE SEND ARRAY")
      $$$TRACE(tHttpResponse)
      //If there was an error and there was a http response with size then display the error output it along with the data
      If $$$ISERR(tSC)&&$IsObject(tHttpResponse)&&$IsObject(tHttpResponse.Data)&&tHttpResponse.Data.Size 
@@ -217,12 +206,9 @@ Method SendRequest(Output tHttpResponse As %Net.HttpResponse, send As %String, t
             Catch ex {
                 //Not bothered as then 
             }
-	       	$$$TRACE(message)
 		}
 		
 	}
-        $$$TRACE("Constructing Response")
-  
     Q tSC
 }
 
@@ -254,7 +240,7 @@ Method constructResponse(pHttpResponse As %Net.HttpResponse, Output pResponse As
 /// Assemble Envelope and Body into HTTP EntityBody stream
 Method AddAccessToken(ByRef pHttpRequest As %Net.HttpRequest) As %Status
 {
-	$$$TRACE("SRFT.HttpOperation:AddAccessToken") 
+	$$$TRACE("AddAccessToken") 
     Set tSC = $$$OK
     #dim error as %OAuth2.Error
     Try {
@@ -267,7 +253,7 @@ Method AddAccessToken(ByRef pHttpRequest As %Net.HttpRequest) As %Status
         ;Throw:'$$$NULLOREF=error ..ExceptionFromOAuth2Error(error)
         Throw:$isobject(error) ..ExceptionFromOAuth2Error(error)
         If 'isAuthorised {
-	        $$$TRACE("SRFT.DCCHttpOperation:AddAccessToken isAuthorised false")
+	        $$$TRACE("Not Authorised currently")
             //Add any Parameters
             s paramsarr = [].%FromJSON(..Params)
             s iterator = paramsarr.%GetIterator()
@@ -278,7 +264,8 @@ Method AddAccessToken(ByRef pHttpRequest As %Net.HttpRequest) As %Status
             }
 
             Set tSC = ##class(%SYS.OAuth2.Authorization).GetAccessTokenClient(..OAuthClientApplicationName,..OAuthScope,.properties,.error,.sessionId)    
-            $$$TRACE("SRFT.DCCHttpOperation:AddAccessToken isAuthorised " _ tSC)
+            $$$TRACE("AddAccessToken isAuthorised " _ tSC)
+            $$$TRACE(error.ErrorDescription)
             Throw:$isobject(error) ..ExceptionFromOAuth2Error(error)
         }
         ; sendType is the mode of sending access token to resource server
@@ -290,9 +277,9 @@ Method AddAccessToken(ByRef pHttpRequest As %Net.HttpRequest) As %Status
     } Catch exception {
         Set tSC = exception.AsStatus()
         $$$TRACE("EXCEPTION")
-        $$$TRACE("SRFT.DCCHttpOperation:AddAccessToken Code" _ exception.Code)
-        $$$TRACE("SRFT.DCCHttpOperation:AddAccessToken Location" _ exception.Location)
-        $$$TRACE("SRFT.DCCHttpOperation:AddAccessToken Data" _ exception.Data)
+        $$$TRACE("AddAccessToken Code" _ exception.Code)
+        $$$TRACE("AddAccessToken Location" _ exception.Location)
+        $$$TRACE("AddAccessToken Data" _ exception.Data)
     }
 
     Return tSC
