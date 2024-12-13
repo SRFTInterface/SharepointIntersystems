@@ -8,7 +8,7 @@ The following is interesystems classes to allow the Upload and Download of files
 ## Authors
 
 - [Mark O'Reilly](https://www.github.com/Sparkei)
-- Dean White
+- [Dean White] (https://community.intersystems.com/user/dean-white-0)
 
 ## Prerequisites
 Tp use this code you need a sharepoint site set up with API enabled
