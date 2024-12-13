@@ -16,17 +16,17 @@ Property DeleteFileAfterDownload As %Boolean [ InitialExpression = 0, Required ]
 
 ClassMethod OnGetConnections(Output pArray As %String, pItem As Ens.Config.Item)
 {
-	d pItem.PopulateModifiedSettings()
-	s (tValue,tIndex)=""
-	for
+	Do pItem.PopulateModifiedSettings()
+	Set (tValue,tIndex)=""
+	For
 	{
-		s tSetting = pItem.ModifiedSettings.GetNext(.tIndex) q:tIndex=""
-		if tSetting.Name = "SharePointService" s tValue=tSetting.Value  q:tIndex=""
-		If tSetting.Name = "UploadFileToService" Set tValue=tValue_","_tSetting.Value q:tIndex=""
+		Set tSetting = pItem.ModifiedSettings.GetNext(.tIndex) Quit:tIndex=""
+		If tSetting.Name="SharePointService" Set tValue=tValue_","_tSetting.Value
+		If tSetting.Name="UploadFileToService" Set tValue=tValue_","_tSetting.Value
 	}
-	for i=1:1:$Length(tValue,",") 
+	For i=1:1:$Length(tValue,",")
 	{
-		s tOne=$ZStrip($p(tValue,",",i),"<>W")  Continue:""=tOne  s pArray(tOne)=""
+		Set tOne=$ZStrip($P(tValue,",",i),"<>W")  Continue:""=tOne  Set pArray(tOne)=""
 	}
 }
 
